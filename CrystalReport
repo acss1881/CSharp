@@ -12,7 +12,8 @@
             // carga reporte en una variable stream que se puede enviar por correo
             Stream stream = reportDocument.ExportToStream(ExportFormatType.PortableDocFormat);
 
-            // enviar al navegador y tratar con javascript "buscar en el repositorio angular js"
+            // enviar al navegador y tratar con javascript "buscar en el repositorio angular js" 
+            // link: https://github.com/acss1881/Librerias_Angular_JS
             // o descargar automaticamente
             return File(StreamToBytes(reportDocument.ExportToStream(ExportFormatType.PortableDocFormat)), "application/pdf", "documento.pdf");
             
