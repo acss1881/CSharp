@@ -1,0 +1,19 @@
+ public ActionResult crystal() {
+ 
+            DataSet model = carga_datos();// consulta a la base de datos 
+
+            ReportDocument reportDocument = new ReportDocument();
+            reportDocument.Load(Path.Combine(Server.MapPath("~/reportes"), "Crystal_report.rpt"));
+            reportDocument.SetDataSource(model);
+
+
+            reportDocument.SetParameterValue("parametro", "Parametro_1");
+            
+            // carga reporte en una variable stream que se puede enviar por correo
+            Stream stream = reportDocument.ExportToStream(ExportFormatType.PortableDocFormat);
+
+            // enviar al navegador y tratar con javascript "buscar en el repositorio angular js"
+            // o descargar automaticamente
+            return File(StreamToBytes(reportDocument.ExportToStream(ExportFormatType.PortableDocFormat)), "application/pdf", "documento.pdf");
+            
+        }
