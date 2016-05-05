@@ -13,7 +13,7 @@
             Stream stream = reportDocument.ExportToStream(ExportFormatType.PortableDocFormat);
 
             // enviar al navegador y tratar con javascript "buscar en el repositorio angular js" 
-            // link: https://github.com/acss1881/Librerias_Angular_JS
+            // link: https://github.com/acss1881/Librerias_Angular_JS/blob/master/RoportService
             // o descargar automaticamente
             return File(StreamToBytes(reportDocument.ExportToStream(ExportFormatType.PortableDocFormat)), "application/pdf", "documento.pdf");
             
