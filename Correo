@@ -1,0 +1,196 @@
+    /// <summary>
+    /// Envio de correo basico funciona para cualquier correo
+    /// para el uso de esta clase se requiere tener en el proyecto un archivo xml llamado correos con la siguinerte informacion 
+    ///<correos>
+    ///<correo>
+    /// <id>0</id> para tener varios correos configurados
+    /// <puerto>587</puerto> es gmail
+    /// <ssl>true</ssl> para gmail
+    /// <smtp>smtp.dominio.com</smtp>
+    /// <correoenvio>info@dominio.com</correoenvio>
+    /// <contraseña>Contraseña</contraseña>
+    /// </correo>
+    ///</correos>
+    /// </summary>
+    public class correo
+    {
+        //Creamos un nuevo Objeto de mensaje
+        private System.Net.Mail.MailMessage mmsg = new MailMessage();
+        private MailAddressCollection dir_coll = new MailAddressCollection();
+
+        // investiga esta para adjuntar varios archivos 
+        //System.Net.Mail.AttachmentCollection adjunto = new AttachmentCollection();
+       
+        public bool exito = true; 
+
+        /// <summary>
+        /// retorna el mensaje de error al fallar la coneccion o envio
+        /// </summary>
+        public string mensajeError = "";
+
+        private bool ssl = false;
+        private string puerto = "";
+        private string smtp = "";
+        private string correoenvio = "";
+        private string contraseña = "";
+
+      
+
+        /// <summary>
+        /// agregar el destinatario principal o los destinatarios puedes enviar varios ejemplo 
+        /// EnviarA("correo1@gmail.com");
+        /// EnviarA("correo2@gmail.com");
+        /// EnviarA("correo3@gmail.com");
+        /// </summary>
+        /// <param name="destinatario">captura correo electronico del destinatario</param>
+        public void EnviarA(string destinatario)
+        {
+            mmsg.To.Add(destinatario);
+        }
+
+
+
+        /// <summary>
+        /// Direcciones de correo electronico que queremos que reciba una copia del mensaje ej
+        /// CopiarA("correo1@dominio.com");
+        /// CopiarA("correo2@dominio.com");
+        /// CopiarA("correo3@dominio.com");
+        /// </summary>
+        /// <param name="copia">captura correo</param>
+        public void CopiarA(string copia)
+        {
+            
+            mmsg.Bcc.Add(copia); //Opcional
+        }
+
+
+        /// <summary>
+        /// recibe dos parametros adjunto y nombre 
+        /// el adjunto convertirlo en System.IO.Stream
+        /// </summary>
+        /// <param name="dato">System.IO.Stream</param>
+        /// /// <param name="nombre">Nombre del archivo</param>
+        public void adjunto(System.IO.Stream dato, string nombre)
+        {
+            mmsg.Attachments.Add(new Attachment(dato, nombre));
+        }
+
+
+
+        /// <summary>
+        /// crea el cuerpo del mensaje y el asuso 
+        /// </summary>
+        /// <param name="contenido_html">indica si el correo se enviara en formato html = true o texo normal = false </param>
+        /// <param name="contenido">captura el cuerpo del mensaje</param>
+        /// <param name="asunto">hay un asunto po default "No tiene asunto"</param>
+        public void asunto_contenido(bool contenido_html, string contenido, string asunto = "No tiene asunto")
+        {
+            //Asunto
+            mmsg.Subject = asunto;
+            mmsg.SubjectEncoding = System.Text.Encoding.UTF8;
+
+            //Cuerpo del Mensaje
+            mmsg.Body = contenido;
+            mmsg.BodyEncoding = System.Text.Encoding.UTF8;
+
+            //Si no queremos que se envíe como HTML
+            mmsg.IsBodyHtml = contenido_html;
+
+        }
+
+
+        /// <summary>
+        /// envia el correo para esta opcion tiene que tener el archivo xml configurado 
+        /// porque la aplicacion va abuscar este archivo que debe estar ubicado el web.config de la aplicacion
+        /// esta opcion puede ser modificada para enviarle toda esta informacion desde la aplicacion
+        ///<connectionStrings>
+        ///  <add name="correos" connectionString="D:/DESARROLLO/XML/Correos.xml"/>
+        ///</connectionStrings>
+        /// </summary>
+        /// <param name="id_conexion_correo">recibe el id de coneccion del archivo xml con se explica en la cabecera de la clase</param>
+        public void enviar_correo(string id_conexion_correo = "0")
+        {
+            if (carga_coneccion(id_conexion_correo))
+            {
+
+                //Correo electronico desde la que enviamos el mensaje
+                mmsg.From = new System.Net.Mail.MailAddress(correoenvio);
+                /*-------------------------CLIENTE DE CORREO----------------------*/
+
+                //Creamos un objeto de cliente de correo
+                System.Net.Mail.SmtpClient cliente = new SmtpClient();
+
+                //Hay que crear las credenciales del correo emisor
+                cliente.Credentials = new System.Net.NetworkCredential(correoenvio, contraseña);
+
+                //Lo siguiente es obligatorio si enviamos el mensaje desde Gmail
+
+                cliente.Port = Convert.ToInt32(puerto);
+                cliente.EnableSsl = ssl;
+                cliente.Host = smtp;
+
+
+
+
+                /*-------------------------ENVIO DE CORREO----------------------*/
+
+                try
+                {
+                    //Enviamos el mensaje 
+
+                    cliente.Send(mmsg);
+                }
+                catch (System.Net.Mail.SmtpException ex)
+                {
+                    exito = false;
+                    mensajeError = ex.Message + smtp + ssl + puerto+ correoenvio+ contraseña;
+                }
+            }
+        }
+    
+        private bool carga_coneccion(string id)
+        {
+            bool retorno = true;
+            try
+            {
+                XDocument miXML = XDocument.Load(ConfigurationManager.ConnectionStrings["correos"].ConnectionString);
+
+                var data = from coneccion in miXML.Descendants("correo")
+                           where coneccion.Element("id").Value == id.Trim() //Consultamos por el atributo
+                           select new
+                           {
+                               puerto = coneccion.Element("puerto").Value,
+                               ssl = coneccion.Element("ssl").Value,
+                               smtp = coneccion.Element("smtp").Value,
+                               correoenvio = coneccion.Element("correoenvio").Value,
+                               contraseña = coneccion.Element("contraseña").Value
+                           };
+                int cont = 0;
+                foreach (var link in data)
+                {
+                    cont++;
+
+                    puerto = link.puerto.ToString().Trim();
+                    if (link.ssl.ToString().Trim() == "true")
+                    {
+                        ssl = true;
+                    }
+                    smtp = link.smtp.ToString().Trim();
+                    correoenvio = link.correoenvio.ToString().Trim();
+                    contraseña = link.contraseña.ToString().Trim();
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                retorno = false;
+                mensajeError = ex.Message;
+
+            }
+
+            return retorno;
+
+        }
+    }
