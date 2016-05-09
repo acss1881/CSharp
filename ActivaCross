@@ -1,0 +1,43 @@
+Instalar paquetes: los dos o dependiendo de lo que requiera
+Microsoft.AspNet.Cros
+Microsoft.WebApi.Cros
+
+
+modificar archivo App_Start/WebApiConfig.cs
+
+  public static class WebApiConfig
+    {
+        public static void Register(HttpConfiguration config)
+        {
+            // Configuración y servicios de API web
+            var urls = new EnableCorsAttribute("*", "*", "*");
+            //Parameters
+            //origins
+              //Type: System.String
+                //Comma-separated list of origins that are allowed to access the resource.Use "*" to allow all.
+            //headers
+              //Type: System.String
+                //Comma-separated list of headers that are supported by the resource.Use "*" to allow all.Use null or empty string 
+                //to allow none.
+            //methods
+              //Type: System.String
+                //Comma-separated list of methods that are supported by the resource. Use "*" to allow all.Use null or empty string 
+                //to allow none. Note: Http verbs are case-sensitive, if you don't use "*", you should use upper case when specifying
+                //GET, PUT, POST, DELETE etc. 
+                //For example: var cors = new EnableCorsAttribute("http://localhost:1234", "*", "GET,PUT,POST,DELETE");
+
+            config.EnableCors(urls);
+            // Rutas de API web
+            config.MapHttpAttributeRoutes();
+
+            config.Routes.MapHttpRoute(
+                name: "DefaultApi",
+                routeTemplate: "api/{controller}/{id}",
+                defaults: new { id = RouteParameter.Optional }
+            );
+        }
+    }
+    
+    
+    
+    Listos peticiones externas.
